@@ -10,7 +10,7 @@ type Props = {
 export const Account = ({ transaction, style }: Props) => {
   return (
     <td style={{ ...style }}>
-      {transaction.account_number}
+      {transaction.account_id}
       {transaction.account_type}
     </td>
   );

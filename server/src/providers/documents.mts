@@ -41,7 +41,7 @@ export const getDocumentsByFinancialEntityIds = sql<IGetDocumentsByFinancialEnti
     SELECT at.id as financial_entity_id
     FROM accounter_schema.all_transactions at
     LEFT JOIN accounter_schema.financial_accounts fa
-    ON  at.account_number = fa.account_number
+    ON  at.account_id = fa.id
     WHERE fa.owner IN $$financialEntityIds
     )
   ORDER BY created_at DESC;

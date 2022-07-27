@@ -20,7 +20,7 @@ export const ConfirmButton = ({ transaction, propertyName, value }: Props) => {
       propertyToChange: propertyName,
       id: transaction.id,
       // bank_reference: transaction.bank_reference,
-      // account_number: transaction.account_number,
+      // account_id: transaction.account_id,
       // account_type: transaction.account_type,
       // currency_code: transaction.currency_code,
       // event_date: transaction.event_date

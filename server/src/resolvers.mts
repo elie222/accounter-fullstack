@@ -43,10 +43,10 @@ import {
 } from './helpers/hashavshevet.mjs';
 import { buildLedgerEntries, decorateCharge, effectiveDateSuplement } from './helpers/misc.mjs';
 import {
-  getChargeByFinancialAccountNumberLoader,
+  getChargeByFinancialAccountIdLoader,
   getChargeByFinancialEntityIdLoader,
   getChargeByIdLoader,
-  getChargesByFinancialAccountNumbers,
+  getChargesByFinancialAccountIds,
   getChargesByFinancialEntityIds,
   getConversionOtherSide,
   updateCharge,
@@ -62,7 +62,7 @@ import {
 } from './providers/documents.mjs';
 import { getChargeExchangeRates } from './providers/exchange.mjs';
 import {
-  getFinancialAccountByAccountNumberLoader,
+  getFinancialAccountByIdLoader,
   getFinancialAccountsByFinancialEntityIdLoader,
 } from './providers/financial-accounts.mjs';
 import { getFinancialEntityByIdLoader } from './providers/financial-entities.mjs';
@@ -111,12 +111,12 @@ const commonFinancialAccountFields: CardFinancialAccountResolvers | BankFinancia
   id: DbAccount => DbAccount.id,
   charges: async (DbAccount, { filter }) => {
     if (!filter || Object.keys(filter).length === 0) {
-      const charges = await getChargeByFinancialAccountNumberLoader.load(DbAccount.account_number);
+      const charges = await getChargeByFinancialAccountIdLoader.load(DbAccount.id);
       return charges;
     }
-    const charges = await getChargesByFinancialAccountNumbers.run(
+    const charges = await getChargesByFinancialAccountIds.run(
       {
-        financialAccountNumbers: [DbAccount.account_number],
+        financialAccountIds: [DbAccount.id],
         fromDate: filter?.fromDate,
         toDate: filter?.toDate,
       },
@@ -175,13 +175,12 @@ const commonTransactionFields:
   description: DbTransaction => `${DbTransaction.bank_description} ${DbTransaction.detailed_bank_description}`,
   userNote: DbTransaction => DbTransaction.user_description,
   account: async DbTransaction => {
-    // TODO: enhance logic to be based on ID instead of account_number
-    if (!DbTransaction.account_number) {
-      throw new Error(`Transaction ID="${DbTransaction.id}" is missing account_number`);
+    if (!DbTransaction.account_id) {
+      throw new Error(`Transaction ID="${DbTransaction.id}" is missing account_id`);
     }
-    const account = await getFinancialAccountByAccountNumberLoader.load(DbTransaction.account_number);
+    const account = await getFinancialAccountByIdLoader.load(DbTransaction.account_id);
     if (!account) {
-      throw new Error(`Transaction ID="${DbTransaction.id}" is missing account_number`);
+      throw new Error(`Transaction ID="${DbTransaction.id}" is missing account_id`);
     }
     return account;
   },
@@ -374,7 +373,7 @@ export const resolvers: Resolvers = {
           throw new Error(`Charge ID='${chargeId}' not found`);
         }
 
-        const financialAccount = await getFinancialAccountByAccountNumberLoader.load(charge.account_number);
+        const financialAccount = await getFinancialAccountByIdLoader.load(charge.account_id);
 
         if (!financialAccount || !financialAccount.owner) {
           throw new Error(`Financial entity for charge ID='${chargeId}' not found`);
@@ -533,21 +532,21 @@ export const resolvers: Resolvers = {
         if (!charge) {
           throw new Error(`Charge ID="${chargeId}" not found`);
         }
-        if (!charge.account_number) {
-          throw new Error(`Charge ID="${chargeId}" has no account number`);
+        if (!charge.account_id) {
+          throw new Error(`Charge ID="${chargeId}" has no account id`);
         }
 
-        const account = await getFinancialAccountByAccountNumberLoader.load(charge.account_number);
+        const account = await getFinancialAccountByIdLoader.load(charge.account_id);
         if (!account) {
-          throw new Error(`Account number="${charge.account_number}" not found`);
+          throw new Error(`Account id="${charge.account_id}" not found`);
         }
 
         if (!account.owner) {
-          throw new Error(`Account number="${charge.account_number}" has no owner`);
+          throw new Error(`Account id="${charge.account_id}" has no owner`);
         }
         const owner = await getFinancialEntityByIdLoader.load(account.owner);
         if (!owner) {
-          throw new Error(`FinancialEntity ID="${charge.account_number}" not found`);
+          throw new Error(`FinancialEntity ID="${account.owner}" not found`);
         }
 
         const [hashBusinessIndexes] = await getHashavshevetBusinessIndexes.run(
@@ -841,8 +840,8 @@ export const resolvers: Resolvers = {
             const guildAccounts = await getFinancialAccountsByFinancialEntityIdLoader.load(
               '6a20aa69-57ff-446e-8d6a-1e96d095e988'
             );
-            const guildAccountsNumbers = guildAccounts.map(a => a.account_number);
-            if (guildAccountsNumbers.includes(DbCharge.account_number)) {
+            const guildAccountIds = guildAccounts.map(a => a.id);
+            if (guildAccountIds.includes(DbCharge.account_id)) {
               return [
                 {
                   name: 'Uri',
@@ -859,8 +858,8 @@ export const resolvers: Resolvers = {
             const uriAccounts = await getFinancialAccountsByFinancialEntityIdLoader.load(
               'a1f66c23-cea3-48a8-9a4b-0b4a0422851a'
             );
-            const uriAccountsNumbers = uriAccounts.map(a => a.account_number);
-            if (uriAccountsNumbers.includes(DbCharge.account_number)) {
+            const uriAccountsIds = uriAccounts.map(a => a.id);
+            if (uriAccountsIds.includes(DbCharge.account_id)) {
               return [
                 {
                   name: 'Uri',

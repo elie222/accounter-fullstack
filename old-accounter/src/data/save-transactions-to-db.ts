@@ -75,10 +75,11 @@ type ForeignTransaction = ForeignTransactionsBusinessSchema['balancesAndLimitsDa
     | null;
 };
 type Transactions = ILSTransaction[] | ForeignTransaction[] | DecoratedDeposit[] | CardTransaction[];
-type AccountObject = {
+export type AccountObject = {
   accountNumber: number;
   branchNumber: number;
   bankNumber: number;
+  id: string;
 };
 
 export async function saveTransactionsToDB<T extends Transactions>(
@@ -490,7 +491,7 @@ function transactionValuesToArray(transaction: Transactions[0], accountType: Acc
       (transaction as ILSTransaction & AccountObject).activityDescriptionIncludeValueDate,
       (transaction as ILSTransaction & AccountObject).bankNumber,
       (transaction as ILSTransaction & AccountObject).branchNumber,
-      (transaction as ILSTransaction & AccountObject).accountNumber,
+      (transaction as ILSTransaction & AccountObject).id,
     ];
   } else if (accountType == 'usd' || accountType == 'eur' || accountType == 'gbp') {
     values = [
@@ -540,7 +541,7 @@ function transactionValuesToArray(transaction: Transactions[0], accountType: Acc
       (transaction as ForeignTransaction & AccountObject).urlAddress,
       (transaction as ForeignTransaction & AccountObject).bankNumber,
       (transaction as ForeignTransaction & AccountObject).branchNumber,
-      (transaction as ForeignTransaction & AccountObject).accountNumber,
+      (transaction as ForeignTransaction & AccountObject).id,
     ];
   } else if (accountType == 'isracard') {
     values = [
@@ -588,7 +589,7 @@ function transactionValuesToArray(transaction: Transactions[0], accountType: Acc
       (transaction as CardTransaction & AccountObject).isButton,
       (transaction as CardTransaction & AccountObject).siteName,
       (transaction as CardTransaction & AccountObject).clientIpAddress ?? null,
-      (transaction as CardTransaction & AccountObject).card,
+      (transaction as CardTransaction & AccountObject).id,
     ];
   } else if (accountType == 'deposits') {
     values = [
@@ -651,7 +652,7 @@ function transactionValuesToArray(transaction: Transactions[0], accountType: Acc
       (transaction as DecoratedDeposit & AccountObject).revaluatedAmount,
       (transaction as DecoratedDeposit & AccountObject).accountNumber,
       (transaction as DecoratedDeposit & AccountObject).branchNumber,
-      (transaction as DecoratedDeposit & AccountObject).bankNumber,
+      (transaction as DecoratedDeposit & AccountObject).id,
     ];
   }
   return values;

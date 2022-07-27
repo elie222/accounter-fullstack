@@ -36,8 +36,8 @@ export const getLedgerRecordsByFinancialEntityIds = sql<IGetLedgerRecordsByFinan
         WHERE owner IN (
             SELECT id
             FROM accounter_schema.all_transactions
-            WHERE account_number IN (
-                SELECT account_number
+            WHERE account_id IN (
+                SELECT id
                 FROM accounter_schema.financial_accounts
                 WHERE owner IN $$financialEntityIds
             )

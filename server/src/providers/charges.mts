@@ -2,7 +2,7 @@ import pgQuery from '@pgtyped/query';
 import DataLoader from 'dataloader';
 
 import {
-  IGetChargesByFinancialAccountNumbersQuery,
+  IGetChargesByFinancialAccountIdsQuery,
   IGetChargesByFinancialEntityIdsQuery,
   IGetChargesByIdsQuery,
   IGetConversionOtherSideQuery,
@@ -29,29 +29,29 @@ async function batchChargesByIds(ids: readonly string[]) {
 
 export const getChargeByIdLoader = new DataLoader(batchChargesByIds, { cache: false });
 
-export const getChargesByFinancialAccountNumbers = sql<IGetChargesByFinancialAccountNumbersQuery>`
+export const getChargesByFinancialAccountIds = sql<IGetChargesByFinancialAccountIdsQuery>`
     SELECT *
     FROM accounter_schema.all_transactions
-    WHERE account_number IN $$financialAccountNumbers
+    WHERE account_id IN $$financialAccountIds
     AND ($fromDate ::TEXT IS NULL OR event_date::TEXT::DATE >= date_trunc('day', $fromDate ::DATE))
     AND ($toDate ::TEXT IS NULL OR event_date::TEXT::DATE <= date_trunc('day', $toDate ::DATE))
     ORDER BY event_date DESC;`;
 
-async function batchChargesByFinancialAccountNumbers(financialAccountNumbers: readonly number[]) {
-  const charges = await getChargesByFinancialAccountNumbers.run(
+async function batchChargesByFinancialAccountIds(financialAccountIds: readonly string[]) {
+  const charges = await getChargesByFinancialAccountIds.run(
     {
-      financialAccountNumbers,
+      financialAccountIds,
       fromDate: null,
       toDate: null,
     },
     pool
   );
-  return financialAccountNumbers.map(accountNumber =>
-    charges.filter(charge => charge.account_number === accountNumber)
+  return financialAccountIds.map(accountId =>
+    charges.filter(charge => charge.account_id === accountId)
   );
 }
 
-export const getChargeByFinancialAccountNumberLoader = new DataLoader(batchChargesByFinancialAccountNumbers, {
+export const getChargeByFinancialAccountIdLoader = new DataLoader(batchChargesByFinancialAccountIds, {
   cache: false,
 });
 
@@ -59,7 +59,7 @@ export const getChargesByFinancialEntityIds = sql<IGetChargesByFinancialEntityId
     SELECT at.*, fa.owner as financial_entity_id
     FROM accounter_schema.all_transactions at
     LEFT JOIN accounter_schema.financial_accounts fa
-    ON  at.account_number = fa.account_number
+    ON  at.account_id = fa.id
     WHERE fa.owner IN $$financialEntityIds
     AND ($fromDate ::TEXT IS NULL OR at.event_date::TEXT::DATE >= date_trunc('day', $fromDate ::DATE))
     AND ($toDate ::TEXT IS NULL OR at.event_date::TEXT::DATE <= date_trunc('day', $toDate ::DATE))
@@ -174,9 +174,9 @@ export const updateCharge = sql<IUpdateChargeQuery>`
     event_number,
     NULL
   ),
-  account_number = COALESCE(
+  account_id = COALESCE(
     $accountNumber,
-    account_number,
+    account_id,
     NULL
   ),
   account_type = COALESCE(

@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 
 import type {
-  IGetChargesByFinancialAccountNumbersResult,
+  IGetChargesByFinancialAccountIdsResult,
   IGetChargesByIdsResult,
 } from '../__generated__/charges.types.mjs';
 import { getChargeExchangeRates } from '../providers/exchange.mjs';
@@ -217,7 +217,7 @@ export function numberRounded(number: number): number {
   return parseIntRound((number + Number.EPSILON) * 100) / 100;
 }
 
-export function effectiveDateSuplement(transaction: IGetChargesByFinancialAccountNumbersResult) {
+export function effectiveDateSuplement(transaction: IGetChargesByFinancialAccountIdsResult) {
   if (transaction.debit_date) {
     return format(transaction.debit_date, 'yyyy-MM-dd');
   }

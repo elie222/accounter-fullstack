@@ -4,6 +4,7 @@ import DataLoader from 'dataloader';
 import {
   IGetFinancialAccountsByAccountNumbersQuery,
   IGetFinancialAccountsByFinancialEntityIdsQuery,
+  IGetFinancialAccountsByIdsQuery,
 } from '../__generated__/financial-accounts.types.mjs';
 import { pool } from './db.mjs';
 
@@ -45,5 +46,24 @@ async function batchFinancialAccountsByAccountNumbers(accountNumbers: readonly n
 }
 
 export const getFinancialAccountByAccountNumberLoader = new DataLoader(batchFinancialAccountsByAccountNumbers, {
+  cache: false,
+});
+
+const getFinancialAccountsByIds = sql<IGetFinancialAccountsByIdsQuery>`
+SELECT *
+FROM accounter_schema.financial_accounts
+WHERE id IN $$accountIds;`;
+
+async function batchFinancialAccountsByIds(accountIds: readonly string[]) {
+  const accounts = await getFinancialAccountsByIds.run(
+    {
+      accountIds,
+    },
+    pool
+  );
+  return accountIds.map(accountId => accounts.find(account => account.id === accountId));
+}
+
+export const getFinancialAccountByIdLoader = new DataLoader(batchFinancialAccountsByIds, {
   cache: false,
 });

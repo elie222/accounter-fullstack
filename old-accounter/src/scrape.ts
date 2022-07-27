@@ -6,7 +6,7 @@ const { Pool } = pg;
 import { init } from 'modern-poalim-scraper';
 import lodash from 'lodash';
 const { camelCase, upperFirst } = lodash;
-import { saveTransactionsToDB } from './data/save-transactions-to-db';
+import { AccountObject, saveTransactionsToDB } from './data/save-transactions-to-db';
 import { getCurrencyRates } from './data/currency';
 import { isBefore, subYears, addMonths, startOfMonth } from 'date-fns'; // TODO: Use Temporal with polyfill instead
 import { AccountDataSchema } from 'modern-poalim-scraper/dist/generatedTypes/accountDataSchema';
@@ -72,8 +72,7 @@ function getTransactionsFromCards(
   return allData;
 }
 
-// TODO: Remove all any
-async function getILSfromBankAndSave(newScraperIstance: HapoalimScraper, account: AccountDataSchema[0], pool: pg.Pool) {
+async function getILSfromBankAndSave(newScraperIstance: HapoalimScraper, account: AccountObject, pool: pg.Pool) {
   if (newScraperIstance === 'Unknown Error') {
     console.log('getILSfromBankAndSave: No scraper');
     return;
@@ -116,6 +115,7 @@ async function getILSfromBankAndSave(newScraperIstance: HapoalimScraper, account
         accountNumber: ILSTransactions.data.retrievalTransactionData.accountNumber,
         branchNumber: ILSTransactions.data.retrievalTransactionData.branchNumber,
         bankNumber: ILSTransactions.data.retrievalTransactionData.bankNumber,
+        id: account.id,
       },
       pool
     );
@@ -139,7 +139,7 @@ async function getILSfromBankAndSave(newScraperIstance: HapoalimScraper, account
 
 async function getForeignTransactionsfromBankAndSave(
   newScraperIstance: HapoalimScraper,
-  account: AccountDataSchema[0],
+  account: AccountObject,
   pool: pg.Pool
 ) {
   if (newScraperIstance === 'Unknown Error') {
@@ -189,6 +189,7 @@ async function getForeignTransactionsfromBankAndSave(
               accountNumber: foreignAccountsArray.accountNumber,
               branchNumber: foreignAccountsArray.branchNumber,
               bankNumber: foreignAccountsArray.bankNumber,
+              id: account.id,
             },
             pool
           );
@@ -201,46 +202,80 @@ async function getForeignTransactionsfromBankAndSave(
   }
 }
 
-async function getBankData(pool: pg.Pool, scraper: Scraper) {
-  console.log('start getBankData');
-  console.log('Bank Login');
-  const newPoalimInstance = await scraper.hapoalim(
-    {
-      userCode: process.env.USER_CODE as string,
-      password: process.env.PASSWORD as string,
-    },
-    {
-      validateSchema: true,
-      isBusiness: false,
-    }
-  );
-  console.log('getting accounts');
-  const accounts =
-    newPoalimInstance === 'Unknown Error'
-      ? { isValid: false, errors: '', data: null }
-      : ((await newPoalimInstance.getAccountsData()) as {
-          isValid: boolean;
-          errors: unknown;
-          data: AccountDataSchema | null;
-        });
-  console.log('finished getting accounts', accounts.isValid);
-  if (!accounts.isValid) {
-    console.log(`getAccountsData Poalim schema errors: `, accounts.errors);
+async function getDepositsAndSave(newScraperIstance: HapoalimScraper, account: AccountObject, pool: pg.Pool) {
+  if (newScraperIstance === 'Unknown Error') {
+    console.log('getDepositsAndSave: No scraper');
+    return;
   }
-  const tableName = 'financial_accounts';
-  for (const account of accounts.data ?? []) {
+  console.log('getting deposits');
+  const deposits = (await newScraperIstance.getDeposits(account)) as {
+    isValid: boolean;
+    errors: unknown;
+    data: HapoalimDepositsSchema | null;
+  };
+  console.log(`finished getting deposits ${account.accountNumber}`, deposits.isValid);
+  if (!deposits.isValid) {
+    console.log(`getDeposits ${JSON.stringify(account.accountNumber)} schema errors: `, deposits.errors);
+  }
+
+  if (account.accountNumber != 410915 && account.accountNumber != 61066 && account.accountNumber != 466803) {
+    console.error('UNKNOWN ACCOUNT ', account.accountNumber);
+  } else {
+    console.log(`Saving deposits for ${account.accountNumber}`);
+    if (deposits.data?.list.length != 1) {
+      console.log('WRONG NUMBER OF DEPOSITS', deposits.data?.list);
+    } else {
+      const deposit: DecoratedDeposit = deposits.data.list[0];
+      delete deposit.messages;
+
+      if (deposit.data?.length != 1) {
+        console.log('Deposit internal array arong', deposits.data);
+      } else {
+        delete deposit.data[0].metadata;
+
+        const internalArrayKeys = Object.keys(deposit.data[0]);
+
+        for (const key of internalArrayKeys) {
+          let pascalKey = camelCase(key);
+          pascalKey = upperFirst(pascalKey);
+          deposit[`data0${pascalKey}`] = deposit.data[0][key as keyof typeof deposit.data[0]];
+        }
+        delete deposit.data;
+
+        await saveTransactionsToDB(
+          [deposit],
+          'deposits',
+          {
+            accountNumber: account.accountNumber,
+            branchNumber: account.branchNumber,
+            bankNumber: account.bankNumber,
+            id: account.id,
+          },
+          pool
+        );
+      }
+    }
+    console.log(`Saved deposits for ${account.accountNumber}`);
+  }
+}
+
+async function handleHaPoalimAccounts(accounts: AccountDataSchema, tableName: string, pool: pg.Pool) {
+  const columnNamesResult = await pool.query(`
+    SELECT * 
+    FROM information_schema.columns
+    WHERE table_schema = 'accounter_schema'
+    AND table_name = '${tableName}';
+  `);
+
+  const accountsToScrape: AccountObject[] = [];
+
+  for (const account of accounts ?? []) {
     /* check if account exists */
     let whereClause = `
     SELECT * FROM ${`accounter_schema.` + tableName}
     WHERE 
     `;
 
-    const columnNamesResult = await pool.query(`
-      SELECT * 
-      FROM information_schema.columns
-      WHERE table_schema = 'accounter_schema'
-      AND table_name = '${tableName}';
-    `);
 
     const columnNamesToExcludeFromComparison = [
       'privateBusiness',
@@ -312,9 +347,7 @@ async function getBankData(pool: pg.Pool, scraper: Scraper) {
       const res = await pool.query(whereClause);
 
       /* add new accounts */
-      if (res.rowCount > 0) {
-        // console.log('found');
-      } else {
+      if (!res.rowCount || res.rowCount === 0) {
         console.log('Account not found!!');
 
         let columnNames = columnNamesResult.rows.map((column: { column_name: string }) => column.column_name);
@@ -358,16 +391,68 @@ async function getBankData(pool: pg.Pool, scraper: Scraper) {
         ];
 
         const res = await pool.query(text, values);
-        console.log(res);
+
+        if (!res.rows || res.rows.length === 0) {
+          console.log('Error inserting accountto DB', account);
+        } else {
+          console.log(res);
+  
+          accountsToScrape.push({
+            accountNumber: account.accountNumber,
+            branchNumber: account.branchNumber,
+            bankNumber: account.bankNumber,
+            id: res.rows[0].id,
+          })
+        }
+      } else {
+        accountsToScrape.push({
+          accountNumber: account.accountNumber,
+          branchNumber: account.branchNumber,
+          bankNumber: account.bankNumber,
+          id: res.rows[0].id,
+        })
       }
     } catch (error) {
       console.log('Accounts pg error - ', error);
     }
   }
 
-  /* fetch account data */
+  return accountsToScrape;
+};
+
+async function getBankData(pool: pg.Pool, scraper: Scraper) {
+  console.log('start getBankData');
+  console.log('Bank Login');
+  const newPoalimInstance = await scraper.hapoalim(
+    {
+      userCode: process.env.USER_CODE as string,
+      password: process.env.PASSWORD as string,
+    },
+    {
+      validateSchema: true,
+      isBusiness: false,
+    }
+  );
+  console.log('getting accounts');
+  const accounts =
+    newPoalimInstance === 'Unknown Error'
+      ? { isValid: false, errors: '', data: null }
+      : ((await newPoalimInstance.getAccountsData()) as {
+          isValid: boolean;
+          errors: unknown;
+          data: AccountDataSchema | null;
+        });
+  console.log('finished getting accounts', accounts.isValid);
+  if (!accounts.isValid) {
+    console.log(`getAccountsData Poalim schema errors: `, accounts.errors);
+  }
+  const tableName = 'financial_accounts';
+
+  const dbAccounts = accounts.data ? await handleHaPoalimAccounts(accounts.data, tableName, pool) : [];
+
+  /* fetch account extended data */
   await Promise.all(
-    (accounts.data ?? []).map(async account => {
+    (dbAccounts ?? []).map(async account => {
       console.log(`Getting ILS, Foreign and deposits for ${account.accountNumber}`);
       const results = await Promise.allSettled([
         getILSfromBankAndSave(newPoalimInstance, account, pool),
@@ -380,62 +465,6 @@ async function getBankData(pool: pg.Pool, scraper: Scraper) {
   console.log('finish iterating over bank accounts');
   // await newScraper.close();
   // console.log('closed');
-}
-
-async function getDepositsAndSave(newScraperIstance: HapoalimScraper, account: AccountDataSchema[0], pool: pg.Pool) {
-  if (newScraperIstance === 'Unknown Error') {
-    console.log('getDepositsAndSave: No scraper');
-    return;
-  }
-  console.log('getting deposits');
-  const deposits = (await newScraperIstance.getDeposits(account)) as {
-    isValid: boolean;
-    errors: unknown;
-    data: HapoalimDepositsSchema | null;
-  };
-  console.log(`finished getting deposits ${account.accountNumber}`, deposits.isValid);
-  if (!deposits.isValid) {
-    console.log(`getDeposits ${JSON.stringify(account.accountNumber)} schema errors: `, deposits.errors);
-  }
-
-  if (account.accountNumber != 410915 && account.accountNumber != 61066 && account.accountNumber != 466803) {
-    console.error('UNKNOWN ACCOUNT ', account.accountNumber);
-  } else {
-    console.log(`Saving deposits for ${account.accountNumber}`);
-    if (deposits.data?.list.length != 1) {
-      console.log('WRONG NUMBER OF DEPOSITS', deposits.data?.list);
-    } else {
-      const deposit: DecoratedDeposit = deposits.data.list[0];
-      delete deposit.messages;
-
-      if (deposit.data?.length != 1) {
-        console.log('Deposit internal array arong', deposits.data);
-      } else {
-        delete deposit.data[0].metadata;
-
-        const internalArrayKeys = Object.keys(deposit.data[0]);
-
-        for (const key of internalArrayKeys) {
-          let pascalKey = camelCase(key);
-          pascalKey = upperFirst(pascalKey);
-          deposit[`data0${pascalKey}`] = deposit.data[0][key as keyof typeof deposit.data[0]];
-        }
-        delete deposit.data;
-
-        await saveTransactionsToDB(
-          [deposit],
-          'deposits',
-          {
-            accountNumber: account.accountNumber,
-            branchNumber: account.branchNumber,
-            bankNumber: account.bankNumber,
-          },
-          pool
-        );
-      }
-    }
-    console.log(`Saved deposits for ${account.accountNumber}`);
-  }
 }
 
 async function getCreditCardTransactionsAndSave(
@@ -463,8 +492,23 @@ async function getCreditCardTransactionsAndSave(
   }
   const allData = getTransactionsFromCards(monthTransactions.data?.CardsTransactionsListBean);
 
-  const wantedCreditCards = ['1082', '2733', '9217', '6264', '1074', '17 *'];
-  const onlyWantedCreditCardsTransactions = allData.filter(transaction => wantedCreditCards.includes(transaction.card));
+  const wantedCreditCards = ['1082', '2733', '9217', '6264', '1074', '17 *', '6466', '9270', '5084'];
+  const newCards: string[] = [];
+  const onlyWantedCreditCardsTransactions = allData.reduce<CardTransaction[]>((prev, transaction) => {
+    if (wantedCreditCards.includes(transaction.card)) {
+      prev.push(transaction);
+    } else if(!newCards.includes(transaction.card)) {
+      newCards.push(transaction.card);
+    }
+    return prev;
+  }, [])
+  // remove this:
+  if (newCards.length > 0) {
+    console.log('\n\nNEW CARD:',newCards);
+  }
+  ////
+
+
 
   if (onlyWantedCreditCardsTransactions.length > 0) {
     console.log(`saving isracard ${month.getMonth()}:${month.getFullYear()} - ${id}`);
