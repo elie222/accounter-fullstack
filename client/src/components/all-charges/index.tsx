@@ -82,6 +82,8 @@ export const AllCharges = () => {
       ? businesses['Software Products Guilda Ltd.']
       : financialEntityName === 'UriLTD'
       ? businesses['Uri Goldshtein LTD']
+      : financialEntityName === 'Gil'
+      ? '2b4af2df-86b3-47de-b92b-0d98e5fb3a3f'
       : '6a20aa69-57ff-446e-8d6a-1e96d095e988';
 
   const { data, isLoading } = useAllChargesQuery({
