@@ -15,11 +15,12 @@
       "packages/*"
     ]
   },
+  "packageManager": "yarn@4.4.0",
   "engines": {
     "node": "22.8.0"
   },
   "scripts": {
-    "build": "yarn workspaces run build",
+    "build": "yarn workspaces foreach --all run build",
     "client:build": "yarn --cwd packages/client build",
     "client:dev": "yarn --cwd packages/client dev",
     "db:init": "yarn --cwd packages/migrations db:init",
