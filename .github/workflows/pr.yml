@@ -91,12 +91,11 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      pull-requests: write
     uses: the-guild-org/shared-config/.github/workflows/release-snapshot.yml@v1
     with:
-      node-version-file: .node-version
       npmTag: alpha
       buildScript: build
+      node-version-file: .node-version
     secrets:
       githubToken: ${{ secrets.GITHUB_TOKEN }}
       npmToken: ${{ secrets.NPM_TOKEN }}
