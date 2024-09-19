@@ -15,7 +15,7 @@
       "packages/*"
     ]
   },
-  "packageManager": "yarn@4.4.0",
+  "packageManager": "yarn@4.5.0",
   "engines": {
     "node": "22.9.0"
   },
