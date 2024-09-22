@@ -107,7 +107,7 @@ __metadata:
     tailwindcss-animate: "npm:1.0.7"
     urql: "npm:4.1.0"
     vaul: "npm:0.9.4"
-    vite: "npm:5.4.6"
+    vite: "npm:5.4.7"
     zod: "npm:3.23.8"
     zustand: "npm:4.5.5"
   languageName: unknown
@@ -270,7 +270,7 @@ __metadata:
     graphql-modules: "npm:2.3.0"
     graphql-yoga: "npm:5.7.0"
     node-cache: "npm:5.1.2"
-    nodemon: "npm:3.1.6"
+    nodemon: "npm:3.1.7"
     pg: "npm:8.13.0"
     pino-pretty: "npm:11.2.2"
     reflect-metadata: "npm:0.2.2"
@@ -14624,9 +14624,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemon@npm:3.1.6":
-  version: 3.1.6
-  resolution: "nodemon@npm:3.1.6"
+"nodemon@npm:3.1.7":
+  version: 3.1.7
+  resolution: "nodemon@npm:3.1.7"
   dependencies:
     chokidar: "npm:^3.5.2"
     debug: "npm:^4"
@@ -14640,7 +14640,7 @@ __metadata:
     undefsafe: "npm:^2.0.5"
   bin:
     nodemon: bin/nodemon.js
-  checksum: 10c0/c0fe4a5cccba7bdde1589f9d55c85f53e7c31af570f97bc0e2fc7ec0e6014024e89fb8977907e628360e0030fc6a4af14ebe063db294443d1dd7af14d10c77eb
+  checksum: 10c0/e0b46939abdbce251b1d6281005a5763cee57db295bb00bc4a753b0f5320dac00fe53547fb6764c70a086cf6d1238875cccb800fbc71544b3ecbd3ef71183c87
   languageName: node
   linkType: hard
 
@@ -19038,9 +19038,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:5.4.6":
-  version: 5.4.6
-  resolution: "vite@npm:5.4.6"
+"vite@npm:5.4.7":
+  version: 5.4.7
+  resolution: "vite@npm:5.4.7"
   dependencies:
     esbuild: "npm:^0.21.3"
     fsevents: "npm:~2.3.3"
@@ -19077,7 +19077,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10c0/5f87be3a10e970eaf9ac52dfab39cf9fff583036685252fb64570b6d7bfa749f6d221fb78058f5ef4b5664c180d45a8e7a7ff68d7f3770e69e24c7c68b958bde
+  checksum: 10c0/0ca7ca60f71c61f3855bbabf7e33909bec32933b35914d4d281813c728183e78e7ce5be05735a7671df3a994613d3881f520a32a80715faa92effb28deee9320
   languageName: node
   linkType: hard
 
