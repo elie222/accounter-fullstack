@@ -35,7 +35,7 @@ __metadata:
   resolution: "@accounter-helper/old-accounter@workspace:packages/old-accounter"
   dependencies:
     "@accounter/modern-poalim-scraper": "npm:0.9.11"
-    "@types/lodash": "npm:4.17.7"
+    "@types/lodash": "npm:4.17.9"
     "@types/pg": "npm:8.11.10"
     "@types/uuid": "npm:10.0.0"
     date-fns: "npm:3.6.0"
@@ -103,7 +103,7 @@ __metadata:
     react-router-dom: "npm:6.26.2"
     tabler-icons-react: "npm:1.56.0"
     tailwind-merge: "npm:2.5.2"
-    tailwindcss: "npm:3.4.12"
+    tailwindcss: "npm:3.4.13"
     tailwindcss-animate: "npm:1.0.7"
     urql: "npm:4.1.0"
     vaul: "npm:0.9.4"
@@ -6734,14 +6734,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:4.17.7":
-  version: 4.17.7
-  resolution: "@types/lodash@npm:4.17.7"
-  checksum: 10c0/40c965b5ffdcf7ff5c9105307ee08b782da228c01b5c0529122c554c64f6b7168fc8f11dc79aa7bae4e67e17efafaba685dc3a47e294dbf52a65ed2b67100561
-  languageName: node
-  linkType: hard
-
-"@types/lodash@npm:^4.17.7":
+"@types/lodash@npm:4.17.9, @types/lodash@npm:^4.17.7":
   version: 4.17.9
   resolution: "@types/lodash@npm:4.17.9"
   checksum: 10c0/54de935e835508b5f835a5dfaedd2b9a299685a21d11e9c5cd2dde57331d03bc2f98b71d2424ca8460f447ecd55a673e45ccdb70e58f9f72745710f6b91abc60
@@ -6807,12 +6800,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:20.16.5":
-  version: 20.16.5
-  resolution: "@types/node@npm:20.16.5"
+"@types/node@npm:20.16.6":
+  version: 20.16.6
+  resolution: "@types/node@npm:20.16.6"
   dependencies:
     undici-types: "npm:~6.19.2"
-  checksum: 10c0/6af7994129815010bcbc4cf8221865559c8116ff43e74a6549525c2108267596fc2d18aff5d5ecfe089fb60a119f975631343e2c65c52bfa0955ed9dc56733d6
+  checksum: 10c0/a3bd104b4061451625ed3b320c88e01e1261d41dbcaa7248d376f60a1a831e1cbc4362eef5be3445ccc1ea2d0a9178fc1ddd5e55a4f5df571dce78e5d91375a8
   languageName: node
   linkType: hard
 
@@ -7371,7 +7364,7 @@ __metadata:
     "@parcel/watcher": "npm:^2.4.1"
     "@theguild/eslint-config": "npm:0.12.1"
     "@theguild/prettier-config": "npm:2.0.7"
-    "@types/node": "npm:20.16.5"
+    "@types/node": "npm:20.16.6"
     bob-the-bundler: "npm:^7.0.1"
     concurrently: "npm:9.0.1"
     eslint: "npm:8.57.1"
@@ -17880,9 +17873,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tailwindcss@npm:3.4.12":
-  version: 3.4.12
-  resolution: "tailwindcss@npm:3.4.12"
+"tailwindcss@npm:3.4.13":
+  version: 3.4.13
+  resolution: "tailwindcss@npm:3.4.13"
   dependencies:
     "@alloc/quick-lru": "npm:^5.2.0"
     arg: "npm:^5.0.2"
@@ -17909,7 +17902,7 @@ __metadata:
   bin:
     tailwind: lib/cli.js
     tailwindcss: lib/cli.js
-  checksum: 10c0/9ed1449d3b98ce54c6c3a6c3354121a14b39d8dba28815ea1b0fc5a0b32422a744545ba357690468912a1a781593bc7da3d4e56367abed284a300ae1fb0ab42b
+  checksum: 10c0/c6525be3dd26febc4ec5e45e80596bff8b48ade7de258c1ec8704297bf47c1ec7b2b186b13662ebaa6ab4795ad8879fb64064f796756bfc8b46558b542b01a6c
   languageName: node
   linkType: hard
 
