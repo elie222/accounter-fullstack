@@ -20,7 +20,7 @@ const TRANSACTIONS_REQUEST_ENDPOINT = 'https://api.cal-online.co.il/Transactions
 // Main scraper functions
 export async function cal(page: Page, credentials: CalCredentials, options: CalOptions = {}) {
   await login(credentials, page);
-  return fetchTransactions(page, credentials, options);
+  return fetchTransactions(page, options);
 }
 
 async function login(credentials: CalCredentials, page: Page) {
@@ -88,7 +88,7 @@ async function login(credentials: CalCredentials, page: Page) {
   }
 }
 
-async function fetchTransactions(page: Page, credentials: CalCredentials, options: CalOptions = {}) {
+async function fetchTransactions(page: Page, options: CalOptions = {}) {
   const startDate = options.startDate || subYears(new Date(), 1);
   const authToken = await getAuthorizationHeader(page);
   const cards = await getCards(page);
