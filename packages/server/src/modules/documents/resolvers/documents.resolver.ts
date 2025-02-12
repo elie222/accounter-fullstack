@@ -136,6 +136,9 @@ export const documentsResolvers: DocumentsModule.Resolvers &
         .get(GoogleDriveProvider)
         .fetchFilesFromSharedFolder(sharedFolderUrl);
 
+      // no files found - may be a permissions issue
+      if (!files.length) return [];
+
       if (!chargeId) {
         // generate new charge
         const [newCharge] = await injector.get(ChargesProvider).generateCharge({
